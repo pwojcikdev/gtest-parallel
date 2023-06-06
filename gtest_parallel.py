@@ -234,7 +234,9 @@ class Task(object):
   def run(self):
     begin = time.time()
     with open(self.log_file, 'w') as log:
-      task = subprocess.Popen(self.test_command, stdout=log, stderr=log)
+      self.test_command = " ".join(self.test_command)
+      # print("test_command:", self.test_command)
+      task = subprocess.Popen(self.test_command, stdout=log, stderr=log, shell=True)
       try:
         self.exit_code = sigint_handler.wait(task)
       except sigint_handler.ProcessWasInterrupted:
@@ -612,8 +614,11 @@ def find_tests(binaries, additional_args, options, times):
       list_command += ['--gtest_filter=' + options.gtest_filter]
 
     try:
+      list_command = " ".join(list_command)
+      # print("command:", list_command)
       test_list = subprocess.check_output(list_command,
-                                          stderr=subprocess.STDOUT)
+                                          stderr=subprocess.STDOUT,
+                                          shell=True)
     except subprocess.CalledProcessError as e:
       sys.exit("%s: %s\n%s" % (test_binary, str(e), e.output))
 
@@ -839,9 +844,9 @@ def main():
   # Check that all test binaries have an unique basename. That way we can ensure
   # the logs are saved to unique files even when two different binaries have
   # common tests.
-  unique_binaries = set(os.path.basename(binary) for binary in binaries)
-  assert len(unique_binaries) == len(binaries), (
-      "All test binaries must have an unique basename.")
+  # unique_binaries = set(os.path.basename(binary) for binary in binaries)
+  # assert len(unique_binaries) == len(binaries), (
+  #     "All test binaries must have an unique basename.")
 
   if options.output_dir:
     # Remove files from old test runs.
